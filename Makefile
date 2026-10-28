@@ -5,7 +5,7 @@
 include $(TOPDIR)/rules.mk
 
 LUCI_TITLE:=LuCI support for Leigod Accelerator Manager
-LUCI_DEPENDS:=+luci-base
+LUCI_DEPENDS:=+luci-base +rpcd +jsonfilter +curl +luci-app-upnp
 LUCI_PKGARCH:=all
 
 PKG_NAME:=luci-app-leigod-manager
