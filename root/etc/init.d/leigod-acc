@@ -43,7 +43,7 @@ _clean_rules() {
 }
 
 start() {
-	local enabled mode
+	local enabled mode backend
 	config_load leigod-manager
 	config_get enabled base enabled '1'
 	config_get mode base mode 'tun'
@@ -66,15 +66,19 @@ start() {
 	fi
 
 	# 2. Ensure /etc/config/acc_firewall.ini has mode, backend, and tproxy_ip
+	backend="iptables"
+	if [ "$mode" = "tproxy" ] && command -v nft >/dev/null 2>&1 && nft list ruleset >/dev/null 2>&1; then
+		backend="nftables"
+	fi
 	mkdir -p "$(dirname "$FIREWALL_INI")"
 	if [ -f "$FIREWALL_INI" ]; then
 		grep -q "^mode=" "$FIREWALL_INI" && sed -i "s/^mode=.*/mode=${mode}/" "$FIREWALL_INI" || echo "mode=${mode}" >> "$FIREWALL_INI"
-		grep -q "^backend=" "$FIREWALL_INI" && sed -i "s/^backend=.*/backend=iptables/" "$FIREWALL_INI" || echo "backend=iptables" >> "$FIREWALL_INI"
+		grep -q "^backend=" "$FIREWALL_INI" && sed -i "s/^backend=.*/backend=${backend}/" "$FIREWALL_INI" || echo "backend=${backend}" >> "$FIREWALL_INI"
 		grep -q "^tproxy_ip=" "$FIREWALL_INI" && sed -i "s/^tproxy_ip=.*/tproxy_ip=10.20.30.40/" "$FIREWALL_INI" || echo "tproxy_ip=10.20.30.40" >> "$FIREWALL_INI"
 	else
 		cat > "$FIREWALL_INI" <<EOF
 [firewall]
-backend=iptables
+backend=${backend}
 mode=${mode}
 tproxy_ip=10.20.30.40
 EOF
